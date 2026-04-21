@@ -1,7 +1,7 @@
 /* 
  * CS:APP Data Lab 
  * 
- * <Please put your name and userid here>
+ * okkio
  * 
  * bits.c - Source file with your solutions to the Lab.
  *          This is the file you will hand in to your instructor.
@@ -40,7 +40,7 @@ INTEGER CODING RULES:
       varN = ExprN;
       return ExprR;
   }
-
+ 
   Each "Expr" is an expression using ONLY the following:
   1. Integer constants 0 through 255 (0xFF), inclusive. You are
       not allowed to use big constants such as 0xffffffff.
@@ -143,7 +143,10 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return 2;
+  /*德摩根定律*/
+  int a = ~(x & ~y);
+  int b = ~(~x & y);
+  return ~(a & b);
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -152,9 +155,8 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int tmin(void) {
-
-  return 2;
-
+  /*1左移31位*/
+  return 1 << 31;
 }
 //2
 /*
@@ -165,7 +167,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+  return x ^ 0 == x;
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
