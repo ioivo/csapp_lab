@@ -155,7 +155,7 @@ int bitXor(int x, int y) {
  *   Rating: 1
  */
 int tmin(void) {
-  /*1左移31位*/
+  /*1左移31位即可*/
   return 1 << 31;
 }
 //2
@@ -167,7 +167,10 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return x ^ 0 == x;
+  /*Tmax + 1 等于Tmin, Tmin取反后又得到Tmax,故用此检查x是否为Tmax,但要排除-1.
+    题目要求不能用==，故用!(a ^ b)代替.
+  */
+  return !(x ^ ~(x + 1)) & !!(x + 1);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -178,7 +181,14 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+  /*
+  int mask = 0xAAAAAAAA,x如果满足x & mask == mask则符合题意
+  但是题目要求constant要在0~255之间，故应先构造出mask
+  */
+  int mask = 0xAA;
+  mask = mask | (mask << 8);/*0x0000AAAA*/
+  mask = mask | (mask << 16);/*0xAAAAAAAA*/
+  return !((x & mask) ^ mask);
 }
 /* 
  * negate - return -x 
@@ -188,7 +198,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
 //3
 /* 
@@ -201,7 +211,14 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  return 2;
+  /*同时满足x - 0x30 >= 0 和 0x39 - x >= 0即可
+    题目要求不能用-，所以用加相反数代替（取反加一）
+    判断一个数是否>=0只需看其符号位：
+    (x >> 31) & 1如果是1则x为负数，是0则为非负
+  */
+  int digit1 = x + (~0x30 + 1);
+  int digit2 = 0x39 + (~x + 1);
+  return !(digit1 >> 31) & !(digit2 >> 31);
 }
 /* 
  * conditional - same as x ? y : z 
@@ -211,7 +228,7 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
