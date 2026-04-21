@@ -228,7 +228,11 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  
+  /*判断x是否为0*/
+  int bool_x = !!(x | 0);
+  /*bool_x 如果是1，则mask是0xFFFFFFFF. 否则为0x00000000*/
+  int mask = (bool_x << 31) >> 31;
+  return (y & mask) | (~mask & z);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -238,7 +242,12 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  /*判断x,y正负号，全0为正，全1为负*/
+  int mask_x = x >> 31;
+  int mask_y = y >> 31;
+  int is_xsigny = !(mask_x ^ mask_y); /*return !((y + (~x + 1)) >> 31)*/
+  int is_nx_py = !(mask_x ^ ~0) & !(mask_y ^ 0); /*x < 0, y > 0 return 1*/
+  return is_nx_py | (is_xsigny & !((y + (~x + 1)) >> 31));
 }
 //4
 /* 
@@ -250,7 +259,18 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+  /*0的特殊性质：本身的符号位与相反数的符号位相等（都为0）*/
+
+  /*计算-x*/
+  int neg_x = ~x + 1;
+
+  /*当x != 0, combine的符号位一定为1（包括Tmin）*/
+  int combine = x | neg_x;
+
+  /*x = 0时，mask为0; x != 0时，mask为-1.*/
+  int mask = (combine >> 31);
+
+  return mask + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
