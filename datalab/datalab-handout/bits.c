@@ -285,7 +285,34 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+  int sign = x >> 31;
+
+  /*正数x不变，负数x取反*/
+  x = x ^ sign;
+  /*这样后不管原来x正负，都只要找到最高位1即可*/
+
+  /*二分查找*/
+  int b16, b8, b4, b2, b1, b0;
+
+  b16 = !!(x >> 16) << 4;
+  x = x >> b16;
+  
+  b8 = !!(x >> 8) << 3;
+  x = x >> b8;
+
+  b4 = !!(x >> 4) << 2;
+  x = x >> b4;
+
+  b2 = !!(x >> 2) << 1;
+  x = x >> b2;
+
+  b1 = !!(x >> 1);
+  x = x >> b1;
+
+  b0 = x;
+
+  /*结果加1表示符号位*/
+  return b16 + b8 + b4 + b2 + b1 + b0 + 1;
 }
 //float
 /* 
@@ -300,7 +327,11 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+  unsigned sign = uf & 0x80000000; /*提取符号位*/
+  unsigned exp = (uf >> 23) & 0xFF;
+  unsigned frac = uf & 0x7FFFFF;
+
+  
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
