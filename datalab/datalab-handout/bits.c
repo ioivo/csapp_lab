@@ -287,12 +287,12 @@ int logicalNeg(int x) {
 int howManyBits(int x) {
   int sign = x >> 31;
 
+  /*二分查找*/
+  int b16, b8, b4, b2, b1, b0;
+
   /*正数x不变，负数x取反*/
   x = x ^ sign;
   /*这样后不管原来x正负，都只要找到最高位1即可*/
-
-  /*二分查找*/
-  int b16, b8, b4, b2, b1, b0;
 
   b16 = !!(x >> 16) << 4;
   x = x >> b16;
@@ -328,10 +328,19 @@ int howManyBits(int x) {
  */
 unsigned floatScale2(unsigned uf) {
   unsigned sign = uf & 0x80000000; /*提取符号位*/
-  unsigned exp = (uf >> 23) & 0xFF;
-  unsigned frac = uf & 0x7FFFFF;
+  unsigned exp = (uf >> 23) & 0xFF;/*提取阶码*/
+  unsigned frac = uf & 0x7FFFFF;/*提取frac*/
 
-  
+  if (exp == 0) return  sign | (frac << 1); /*非格式化*/
+
+  if (exp < 255) /*格式化*/
+  {
+    exp++;
+    if (exp == 255) return sign | 0x7F800000; /*无穷大*/
+    return sign | (exp << 23) | frac;
+  }
+
+  return uf; /*NaN*/
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -346,7 +355,30 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+  unsigned sign = uf >> 31; /*提取符号位*/
+  unsigned exp = (uf >> 23) & 0xFF;/*提取阶码*/
+  unsigned frac = uf & 0x7FFFFF;/*提取frac*/
+  int E = exp - 127;
+
+  if (E < 0) return 0;
+  else if (E >= 31) return 0x80000000u;
+
+  frac = frac | (1 << 23);/*补齐原有的1*/
+
+  if (E < 23) 
+  {
+    frac = frac >> (23 - E);
+  }
+  else
+  {
+    frac = frac << (E - 23);
+  }
+  
+  if (sign)
+  {
+    return ~frac + 1;
+  }
+  return frac;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -362,5 +394,11 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+    if (x > 127) return 0x7F800000;/*无穷大*/
+
+    if (x < -149) return 0;/*太小了直接返回0*/
+
+    if (x < -126) return 1 << (x + 149); /*非规格化数*/
+
+    return (x + 127) << 23;/*规格化数*/
 }
