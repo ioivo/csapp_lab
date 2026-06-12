@@ -4,6 +4,7 @@
  * <Put your name and login ID here>
  *    Adan
  */ 
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -261,6 +262,55 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
+    char *id_str = argv[1];
+    struct job_t *job = NULL;
+    int is_jid = 0;
+    int id;
+
+    if (id_str == NULL) {
+        printf("%s command requires PID or %%jobid argument\n", argv[0]);
+        return;
+    }
+    
+    if (id_str[0] == '%') {
+        is_jid = 1;
+        if (id_str[1] < '0' | id_str[1] > '9') {
+            printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+            return;
+        }
+        id = atoi(&id_str[1]);
+    }
+    else {
+        if (id_str[0] < '0' | id_str[0] > '9') {
+            printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+            return;
+        }
+        id = atoi(id_str);
+    }
+
+    if (is_jid) {
+        job = getjobjid(jobs, id);
+        if (job == NULL) {
+            printf("%%%d: No such job\n", id);
+            return;
+        }
+    }
+    else {
+        job = getjobpid(jobs, id);
+        printf("(%d): No such process\n", id);
+        return;
+    }
+
+    kill(-(job->pid), SIGCONT);
+
+    if (strcmp(argv[0], "bg") == 0) {
+        job->state = BG;
+        printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
+    }
+    else {
+        job->state = FG;
+        waitfg(id); 
+    }
     return;
 }
 
@@ -269,7 +319,11 @@ void do_bgfg(char **argv)
  */
 void waitfg(pid_t pid)
 {
-    return;
+    sigset_t mask;
+    sigemptyset(&mask);
+    while (pid == fgpid(jobs)) {
+        sigsuspend(&mask);
+    } 
 }
 
 /*****************
